@@ -5,38 +5,7 @@
 #include "trabalho.h"
 
 //funções implementadas aq
-//essas duas foram geradas com IA
-void paraMinusculo(char texto[])
-{
-    for (int i = 0; texto[i] != '\0'; i++)
-    {
-        if ((unsigned char)texto[i] == 0xC3 && texto[i+1] != '\0')
-        {
-            switch ((unsigned char)texto[i+1])
-            {
-                case 0x80: texto[i+1] = (char)0xA0; break; // À → à
-                case 0x81: texto[i+1] = (char)0xA1; break; // Á → á
-                case 0x82: texto[i+1] = (char)0xA2; break; // Â → â
-                case 0x83: texto[i+1] = (char)0xA3; break; // Ã → ã
-                case 0x87: texto[i+1] = (char)0xA7; break; // Ç → ç
-                case 0x88: texto[i+1] = (char)0xA8; break; // È → è
-                case 0x89: texto[i+1] = (char)0xA9; break; // É → é
-                case 0x8A: texto[i+1] = (char)0xAA; break; // Ê → ê
-                case 0x8D: texto[i+1] = (char)0xAD; break; // Í → í
-                case 0x92: texto[i+1] = (char)0xB2; break; // Ò → ò
-                case 0x93: texto[i+1] = (char)0xB3; break; // Ó → ó
-                case 0x94: texto[i+1] = (char)0xB4; break; // Ô → ô
-                case 0x95: texto[i+1] = (char)0xB5; break; // Õ → õ
-                case 0x9A: texto[i+1] = (char)0xBA; break; // Ú → ú
-            }
-            i++;
-        }
-        else
-        {
-            texto[i] = (char)tolower((unsigned char)texto[i]);
-        }
-    }
-}
+//essa primeira foi gerada com IA porque queria deixar as informações digitadas pelo usuário todos com letra maiúscula para facilitar a busca, mas o toupper é meio chatinho de usar, já que ele faz isso byte por byte, mas letras com acento e ç ocupam dois bytes, então pedi para o gpt fazer essa parte, mas só foi isso que ela fez
 
 void paraMaiusculo(char *str)
 {
@@ -80,7 +49,6 @@ void paraMaiusculo(char *str)
 
 //FUNÇÕES MENU
 
-//adicionar nos parametros a lista de livros
 void menu(tLivros *TL,lUsers *LU, lLivros *LL)
 {
     int n;
@@ -95,29 +63,28 @@ void menu(tLivros *TL,lUsers *LU, lLivros *LL)
     case 2:
         consulta(TL,LU,LL);
         break;
-    /*case 3:
-        atualiza();
+    case 3:
+        atualiza(TL,LU);
         break;
     case 4:
-        excluir();
+        excluir(TL,LU,LL);
         break;
     case 5:
-        emprestar();
+        emprestar(TL,LU);
         break;
     case 6:
-        devolver();
+        devolver(TL);
         break;
     case 7:
-        estatisticas();
-        break;*/
+        estatisticas(LU,LL);
+        break;
     case 0:
-        //sair();
+        sair(TL,LU,LL);
         return;
     
     default:
-        printf("Opção inválida, tente novamente\n");
+        printf("Opção inválida, tente novamente\n\n");
     }
-
 }
 
 void cadastro(tLivros *TL, lUsers *U, lLivros *L)
@@ -126,7 +93,7 @@ void cadastro(tLivros *TL, lUsers *U, lLivros *L)
     printf("1.Livros\n2.Usuários\n0.Voltar\n");
     scanf("%d",&n);
     getchar();
-
+    printf("\n");
     switch (n)
     {
     case 1:
@@ -134,22 +101,21 @@ void cadastro(tLivros *TL, lUsers *U, lLivros *L)
         char titulo[50];
         char autor[50];
         int ano;
-        L->qtelem++;
-        L->qtelemTotal++;
         printf("Cadastro de livro\nTítulo: ");
-        GetMaieMin(titulo,50,1);//1 para maiusculo
+        GetM(titulo,50);
         
         printf("Autor: ");
-        GetMaieMin(autor,50,1);
+        GetM(autor,50);
 
         printf("Ano de publicação: ");
         scanf("%d",&ano);
+        printf("\n");
 
-        //ver esse negócio do ID(esperarresposta do denio)
-        //ver se vai precisar adicionar a verificação do id
         nLivros *livro = setNodeL(setLivro(titulo,autor,ano,L));
         addNodeLL(L,livro);
-
+        TNLivros *TN =setNodeTL(livro->info.id, livro);
+        TL->root = insertNodeR(TL->root,TN);
+        
         break;
     }   
     case 2:
@@ -158,7 +124,7 @@ void cadastro(tLivros *TL, lUsers *U, lLivros *L)
         char nome [50];
 
         printf("Cadastro de Usuário\nEmail: ");
-        GetMaieMin(email,255,0);
+        GetM(email,255);
         
         if (findEmail(U->fisrt,email)!=NULL)
         {
@@ -167,19 +133,18 @@ void cadastro(tLivros *TL, lUsers *U, lLivros *L)
         }
 
         printf("Nome: ");
-        GetMaieMin(nome,50,1);
+        GetM(nome,50);
+        printf("\n");
 
         nUser *user = setNodeU(setUser(email,nome));
         addNodeU(U,user);
-        U->qtelem++;
-        
         break;
     }
     case 0:
         return;
     
     default:
-        printf("Opção inválida, tente novamente\n");
+        printf("Opção inválida, tente novamente\n\n");
     }
 
 }
@@ -190,18 +155,18 @@ void consulta(tLivros *TL,lUsers *LU,lLivros *LL)
     printf("1.Livros\n2.Usuários\n3.Empréstimos\n0.Voltar\n");
     scanf("%d",&n);
     getchar();
+    printf("\n");
 
     switch (n)
     {
     case 1:
     {
         int d;
-        printf("Buscar por:\n1.Código\n2.Autor\n: ");
+        printf("Buscar por:\n1.Código\n2.Autor\n");
         scanf("%d",&d);
         getchar();
         switch (d)
         {
-        
         case 1:
         {
             nLivros *n = NULL;
@@ -209,27 +174,27 @@ void consulta(tLivros *TL,lUsers *LU,lLivros *LL)
             printf("ID: ");
             scanf("%d",&id);
             getchar();
-            n = findID(TL->root,id);
 
-            if (n!=NULL)
-            {
-                printf("Título: %s\nAutor: %s\nAno de publicação: %d\nID: %d\nVezes emprestado: %d\nStatus: ",n->info.titulo,n->info.autor,n->info.ano,n->info.id,n->info.emp);
-                if (n->info.status == 0) printf("DISPONÍVEL\n");
-                else printf("EMPRESTADO\n");
-            }
-        break;    
+            n = findID(TL->root,id);
+            if (n==NULL) return;
+            
+            printf("Título: %s\nAutor(a): %s\nAno de publicação: %d\nVezes emprestado: %d\nStatus: ",n->info.titulo,n->info.autor,n->info.ano,n->info.emp);
+            if (n->info.status == 0) printf("DISPONÍVEL\n\n");
+            else printf("EMPRESTADO\n\n");
+
+            break;    
         }
         case 2:
             {
                 char autor [50];
-                GetMaieMin(autor,50,1);
+                GetM(autor,50);
 
                 findAutor(LL->first,autor);
                 break;
             }
            
         default:
-            printf("Opção inválida, tente novamente\n");
+            printf("Opção inválida, tente novamente\n\n");
             break;
         }
 
@@ -247,10 +212,15 @@ void consulta(tLivros *TL,lUsers *LU,lLivros *LL)
             case 1:
             {
                 printf("Email: ");
-                GetMaieMin(email,255,0);
+                GetM(email,255);
 
                 nUser *e = findEmail(LU->fisrt,email);
-                if (e!=NULL) printf("Nome: %s\nEmail: %s\n",e->info.nome,e->info.email);
+                if (e!=NULL) printf("Nome: %s\nEmail: %s\n\n",e->info.nome,e->info.email);
+                else
+                {
+                    printf("Usuário não cadastrado\n\n");
+                    return;
+                }
                 break;
 
             }
@@ -258,12 +228,13 @@ void consulta(tLivros *TL,lUsers *LU,lLivros *LL)
             {
                 char nome [50];
                 printf("Nome: ");
-                GetMaieMin(nome,50,1);
+                GetM(nome,50);
 
                 findNome(LU->fisrt,nome);
+                break;
             }
             default:
-            printf("Opção inválida, tente novamente\n");
+            printf("Opção inválida, tente novamente\n\n");
             break;
         }
         break;
@@ -271,20 +242,19 @@ void consulta(tLivros *TL,lUsers *LU,lLivros *LL)
     case 3:
     {
         printf("Email do usuário que deseja ver os empréstimos: ");
-        GetMaieMin(email,255,0);
+        GetM(email,255);
         findLporU(LL->first,email);
-    }
-        
         break;
+    }
     case 0:
         return;
 
     default:
-        printf("Opção inválida, tente novamente\n");
+        printf("Opção inválida, tente novamente\n\n");
     }
 }
 
-void atualiza(tLivros *TL,lUsers *LU,lLivros *LL)
+void atualiza(tLivros *TL,lUsers *LU)
 {
     int n;
     char email[255];
@@ -296,110 +266,183 @@ void atualiza(tLivros *TL,lUsers *LU,lLivros *LL)
     {
     case 1:
     {
+        nLivros *n = NULL;
         int titulo,ano,autor,id;
+        char Ntitulo[50];
+        char Nautor[50];
         printf("informe o ID do livro: ");
-        scanf("%d",id);
-        
-        //IMPORTANTE!!!!!!!!!!!!!! pra eu terminar a atualização do livro preciso fazer a arvore de ID que facilita a busca, pq aí ele encontra ou não o id e termina de fazer as operações de acordo com o endereço que ele achar.
+        scanf("%d",&id);
+        n = findID(TL->root,id);
+        if (n==NULL) return;
+            
         printf("Digite 1 para os campos que deseja atualizar e 0 para os que não\nTítulo: ");
         scanf("%d",&titulo);
         printf("Ano: ");
         scanf("%d",&ano);
         printf("Autor: ");
         scanf("%d",&autor);
+        getchar();
 
         if (titulo==1)
         {
-            
+            printf("Novo título: ");
+            GetM(Ntitulo,50);
+            strcpy(n->info.titulo,Ntitulo);
         }
         if (ano==1)
         {
-
+            printf("Novo ano: ");
+            scanf("%d",&n->info.ano);
+            getchar();
         }
         if (autor==1)
         {
-
+            printf("Novo autor: ");
+            GetM(Nautor,50);
+            strcpy(n->info.autor,Nautor);
         }
-    }
+        printf("\n");
         break;
+    }
     case 2:
     {
         printf("Email do usuário do qual deseja alterar o nome: ");
-        GetMaieMin(email,255,0);
+        GetM(email,255);
         nUser *U =findEmail(LU->fisrt,email);
-        if(U!=NULL)
+        if(U==NULL)
         {
+            printf("Usuário não cadastrado\n\n");
+            return;
+        }
             char nome[50];
             printf("Novo nome:");
-            GetMaieMin(nome,50,1);
+            GetM(nome,50);
             strcpy(U->info.nome,nome);
-        }
-        else printf("Usuário não encontrado\n");
-    }
         break;
+    }
     case 0:
         return;
     default:
-        printf("Opção inválida, tente novamente\n");
-    }
+        printf("Opção inválida, tente novamente\n\n");
+}
 }
 
-void excluir()
+void excluir(tLivros *TL,lUsers *LU,lLivros *LL)
 {
     int n;
     printf("1.Livros\n2.Usuários\n0.Voltar\n");
     scanf("%d",&n);
+    getchar();
 
     switch (n)
     {
     case 1:
+    {
+        int id;
+        printf("ID do livro que deseja excluir: ");
+        scanf("%d",&id);
+        getchar();
+        nLivros *L = findID(TL->root,id);
+        if (L==NULL) return;
+        
+        delNodeTL(TL,id);
+        delNodeLL(LL,id);
+        printf("Exclusão realizada com sucesso\n\n");
+    }
         
         break;
     case 2:
+    {
+        char email[255];
+        printf("Email do usuário que deseja excluir: ");
+        GetM(email,255);
+        nUser *U =findEmail(LU->fisrt,email);
+        if(U==NULL)
+        {
+            printf("Usuário não cadastrado\n\n");
+            return;
+        }
+            
         
+        nLivros *aux = LL->first;
+        for(;aux!=NULL;aux=aux->next)
+        {
+            if (strcmp(aux->info.email, U->info.email)==0)
+            {
+                aux->info.email[0]='\0';
+                aux->info.status = 0;
+            }
+        }
+        delNodeLU(LU,U);
+        printf("Exclusão concluída com sucesso\n\n");
         break;
+        
+    }
     case 0:
-      
-        
-        break;
-    
-    
+      return;
     default:
-        printf("Opção inválida, tente novamente\n");
+        printf("Opção inválida, tente novamente\n\n");
     }
 }
 
-void emprestar()
+void emprestar( tLivros *TL,lUsers *LU)
 {
-    //sempre que emprestra eu tenho que somar um na quantidade de vezes que o livro foi emprestado
-}
+    int id;
+    char email[255];
+    nUser *user;
+    printf("ID do livro: ");
+    scanf("%d",&id);
+    getchar();
 
-void devolver()
-{
-    int n;
-    printf("ID: ");
-    scanf("%d",&n);
-
-    switch (n)
+    nLivros *L = findID(TL->root,id);
+    if (L==NULL) return;
+    
+    if (L->info.status==1)
     {
-    case 1:
-        
-        break;
-    case 2:
-        
-        break;
-    
-    
-    default:
-        printf("Opção inválida, tente novamente\n");
+        printf("Esse livro já está emprestado\n\n");
+        return;
     }
+        printf("Informe o email do usuário: ");
+        GetM(email,255);
+        user = findEmail(LU->fisrt,email);
+        if(user==NULL)
+        {
+            printf("Usuário não cadastrado\n\n");
+            return;
+        }
 
+        L->info.status=1;
+        L->info.emp++;
+        user->info.emp++;
+        strcpy(L->info.email,email);
+        printf("Empréstimo realizado com sucesso\n\n");
+    
 }
 
-void estatisticas(tLivros *TL,lUsers *LU,lLivros *LL)
+void devolver(tLivros *TL)
+{
+    int id;
+    printf("ID do livro para devolver: ");
+    scanf("%d",&id);
+    getchar();
+
+    nLivros *L = findID(TL->root,id);
+    if (L==NULL) return;
+    
+    if (L->info.status==0)
+    {
+        printf("Esse livro não está emprestado\n\n");
+        return;
+    }
+        L->info.status=0;
+        L->info.email[0] = '\0';
+        printf("Livro devolvido com sucesso\n\n");
+}
+
+void estatisticas(lUsers *LU,lLivros *LL)
 {
     int n;
-    printf("1.livro mais emprestado\n2.Usuário com mais empréstimos ativos\n3.Total de livros cadastrados\n4.Total de usuários cadastrados\n0.Voltar\n");
+    printf("1.livro mais emprestado\n2.Usuário que realizou mais empréstimos\n3.Total de livros cadastrados\n4.Total de usuários cadastrados\n5.Total de livros atualmente emprestados\n0.Voltar\n");
     scanf("%d",&n);
 
     switch (n)
@@ -422,8 +465,7 @@ void estatisticas(tLivros *TL,lUsers *LU,lLivros *LL)
         {
             if (auxl->info.emp == maior) printf("%s\n----------------\n",auxl->info.titulo);
         }
-        //mostrar quantos por cento dos emrestimos isso representa
-
+        printf("\n");
         break;
     }   
     case 2:
@@ -444,20 +486,41 @@ void estatisticas(tLivros *TL,lUsers *LU,lLivros *LL)
             {
                 if (auxu->info.emp == maior) printf("%s\n----------------\n",auxu->info.email);
             }
-
+            printf("\n");
             break;
     }
     case 3:
-
+    {
+        printf("%d livros cadastrados\n\n",LL->qtelem);
         break;
-    case 0:
-       
-        break;
-    
-    default:
-        printf("Opção inválida, tente novamente\n");
     }
+    case 4:
+    {
+        printf("%d usuários cadastrados\n\n",LU->qtelem);
+        break;
+    }
+    case 5:
+    {
+        int total = 0;
+        nLivros *auxl = LL->first;
+        for (;auxl!=NULL;auxl=auxl->next)
+        {
+            if(auxl->info.status==1) total++;
+        }
+        if (total==0)
+        {
+            printf("Nenhum livro emprestado no momento\n\n");
+            return;
+        }
 
+        printf("%d livro(s) emprestado(s) no momento\n\n",total);
+        break;
+    }
+    case 0:
+        return;
+    default:
+        printf("Opção inválida, tente novamente\n\n");
+    }
 }
 
 void sair(tLivros *TL, lUsers *LU, lLivros *LL)
@@ -470,15 +533,15 @@ void sair(tLivros *TL, lUsers *LU, lLivros *LL)
     free(LU);
 }
 
-
 //FIM DAS FUNÇÕES MENU
 
-//FUNÇÕES PARA CONSTRUIR OS NÓS, LISTAS E A ÁRVORE
+//FUNÇÕES PARA CONSTRUIR OS NÓS E LISTAS
 Usuario setUser(char email[30],char nome[50])
 {
     Usuario u;
     strcpy(u.email,email);
     strcpy(u.nome,nome);
+    u.emp=0;
     return u;
 }
 
@@ -495,19 +558,6 @@ Livro setLivro(char title[50], char autor[50],int ano, lLivros *L)
 
     return l;
 }
-
-//cria um nó de livro para a arvore
-TNLivros *setNodeTL(int id, nLivros *l)
-{
-    TNLivros *NL = (TNLivros *)malloc(sizeof(TNLivros));
-    NL->id = id;
-    NL->endereco = l;
-    NL->left=NULL;
-    NL->right=NULL;
-
-    return NL;
-}
-//cria um nó 
 
 //cria um nó de livro para a lista
 nLivros *setNodeL(Livro L)
@@ -527,6 +577,17 @@ nUser *setNodeU(Usuario U)
 
 
     return User;
+}
+
+//cria um nó pra ABB
+TNLivros *setNodeTL(int id, nLivros *endereco)
+{
+    TNLivros *TN = (TNLivros *)malloc(sizeof(TNLivros));
+    TN->id = id;
+    TN->endereco = endereco;
+    TN->left=NULL;
+    TN->right=NULL;
+    return TN;
 }
 
 //inicializa a lista de usuários
@@ -550,13 +611,13 @@ void initTlivros (tLivros *t)
 }
 
 //adiciona o livro na lista ordnado por ID
-//ver se o prof respondeu a dúvida e ajeitar isso aq conforme
 void addNodeLL(lLivros *LL, nLivros *l)
 {
     nLivros *aux= LL->first,*prev=LL->first;
     if (LL->first==NULL ) {
 		LL->first=l;
 		LL->qtelem++;
+        LL->qtelemTotal++;
 		return;
 	}
 
@@ -565,6 +626,7 @@ void addNodeLL(lLivros *LL, nLivros *l)
 		if (l->info.id < aux->info.id)
 		{
 		    LL->qtelem++;
+            LL->qtelemTotal++;
 			if(aux==LL->first){
 			    l->next=aux;
 			    LL->first=l;
@@ -580,10 +642,9 @@ void addNodeLL(lLivros *LL, nLivros *l)
 	// o novo elemento vai ser incluído no fim
 	prev->next=l;
 	LL->qtelem++;
+    LL->qtelemTotal++;
 	return;	
 }
-
-//terminar de ajeitar esse usando strcmp
 void addNodeU (lUsers *LU, nUser *User) 
 {
     nUser *aux= LU->fisrt,*prev=LU->fisrt;
@@ -616,44 +677,90 @@ void addNodeU (lUsers *LU, nUser *User)
 	return;	
 	
 }
+// FIM DAS FUNÇÕES PARA CONSTRUIR OS NÓS E LISTAS
 
-//adiciona um livro na arvore
-/* REAFZAER ESSA AQ QUE ADICNA O NO DE LIVRO NA ARVORE
-nLivros *addNodeTL (tLivros *TL, nLivros *Livro) 
-{
-	if (TL->root==NULL)
-	   return TL->root = Livro;
-    if (TL->root-> == Livro->info.id)
-    {
-        printf("Esse ID já existe no sistema, cadastre com outro ID\n");
-        return TL->root;
-    }
-	if (Livro->info.id < TL->root->info.id) 
-	   TL->root->left=insertNodeR(TL->root->left,Livro);
-	else {
-	   TL->root->right=insertNodeR(TL->root->right,Livro);
-    }
-	return TL->root;
+//AVL
+
+int depthSubTree(TNLivros *root){
+	int depthLeft, depthRight;
+
+	if (root==NULL)
+	   return 0;
+
+	depthLeft = depthSubTree(root->left); //calculate the depth of the left subtree
+	depthRight = depthSubTree(root->right);//calculate the depth of the right subtree
+
+	return 1 + (depthLeft > depthRight? depthLeft: depthRight); //verify the deepest sub-tree and add + 1.
 }
-    */
-// FIM DAS FUNÇÕES PARA CONSTRUIR OS NÓS, ÁRVORE LISTAS
+TNLivros *ll(TNLivros *root){
+	TNLivros *newRoot = root->left;
+	root->left = newRoot->right;
+	newRoot->right = root;
 
+	return newRoot;
+}
+TNLivros *rr(TNLivros *root){
+	TNLivros *newRoot = root->right;
+	root->right = newRoot->left;
+	newRoot->left = root;
+
+	return newRoot;
+}
+TNLivros *lr(TNLivros *root){
+	root->left = rr(root->left);
+	return ll(root);
+}
+TNLivros *rl(TNLivros *root){
+	root->right = ll(root->right);
+	return rr(root);
+}
+TNLivros *balanceCheck(TNLivros *root){
+	int rootBalance, childBalance;
+
+	rootBalance = depthSubTree(root->left) - depthSubTree(root->right);
+	
+	if (rootBalance > 1){
+		//calculates the balance value of the left child
+		childBalance = depthSubTree(root->left->left) - depthSubTree(root->left->right);
+		root = (childBalance > 0)? ll(root): lr(root);
+
+	}else if (rootBalance < -1){
+		//calculates the balance value of the right child
+		childBalance = depthSubTree(root->right->left) - depthSubTree(root->right->right);
+		root = (childBalance < 0)? rr(root): rl(root);
+	}
+	return root;
+}
+TNLivros *insertNodeR (TNLivros *root, TNLivros *n) //  recursive
+{
+	if (root==NULL)
+	   return n;
+
+	if (n->id < root->id) // go to left
+	   root->left=insertNodeR(root->left,n);
+	else
+	   root->right=insertNodeR(root->right,n);
+
+	root = balanceCheck(root);
+	
+	return root;
+}
+//FIM DA AVL
 
 //FUNÇÕES DE BUSCA
 
-//bbusca se tem o id na arvore
+//busca se tem o id na arvore
 nLivros *findID(TNLivros *L, int id)
 {
     if(L==NULL){
-        printf("ID não encontrado\n");
+        printf("Livro não encontrado\n\n");
         return NULL;
     }
     if (L->id == id) return L->endereco;
     if(id < L->id) return findID(L->left, id);
     if(id > L->id) return findID(L->right, id);
-   return NULL;//verificar isso aq depois
+    return NULL;//verificar isso aq depois
 }
-
 void findAutor(nLivros *L, char autor[50])
 {   
     nLivros *aux = L;
@@ -667,12 +774,12 @@ void findAutor(nLivros *L, char autor[50])
             printf("Título: %s\nAno de publicação: %d\nID: %d\nStatus: ",aux->info.titulo,aux->info.ano,aux->info.id);
             if (aux->info.status == 0) printf("DISPONÍVEL\n");
             else printf("EMPRESTADO\n");
+            printf("-------------------\n");
           }
       }
-      if (flag==0) printf("Nenhum livro cadastrado\n ");
+      if (flag==0) printf("Nenhum livro cadastrado\n\n");
     
 }
-
 nUser *findEmail (nUser *U, char email[255])
 {
     nUser *aux = U;
@@ -695,9 +802,8 @@ void findNome (nUser *U, char nome[50])
             printf("Nome: %s\nEmail: %s\n",aux->info.nome,aux->info.email);
         }
     }
-    if (flag==0) printf("Usuário não cadastrado\n");
+    if (flag==0) printf("Usuário não cadastrado\n\n");
 }
-
 void findLporU(nLivros *L, char email[255])
 {
     nLivros *aux = L;
@@ -710,20 +816,18 @@ void findLporU(nLivros *L, char email[255])
             flag =1;
         }
     }
-    if (flag==0) printf("Nenhum livro encontrado\n");
+    if (flag==0) printf("Nenhum livro encontrado\n\n");
     
 }
-
 //FIM DAS FUNÇÕES DE BUSCA
 
-void GetMaieMin (char *c,int tam, int flag)
+void GetM (char *c,int tam)
 {
     fgets(c,tam,stdin);
     c[strcspn(c, "\n")] = '\0';
-    if (flag==1) paraMaiusculo(c);
-    else paraMinusculo(c);
+    paraMaiusculo(c);
+    
 }
-
 //FUNÇÕES DE FREE MEMORY
 void freeMemoryLL(nLivros *l)// no sair tem q passar o LL->first
 {
@@ -745,3 +849,154 @@ void freeMemoryTL(TNLivros *l)// no sair tem q passar o TN->root
     free(l);
 }
 // FIM DAS FUNÇÕES DE FREE MEMORY
+
+//FUNÇÔES DE EXCLUSÂO:
+////exclui da lista de:
+//usuários
+void delNodeLU (lUsers *s, nUser *U)
+{
+	nUser *aux=s->fisrt,*auxprev=s->fisrt;
+
+	for (;aux!=NULL;aux=aux->next)
+	{
+		if (aux==U)
+		{
+			s->qtelem--;
+			if (aux == s->fisrt)
+			{
+				s->fisrt = aux->next;
+				free(aux);
+				break;
+			}
+			if (aux->next == NULL)
+			{
+				auxprev->next = NULL;
+				free(aux);
+				break;
+			}
+			auxprev->next = aux->next;
+			free(aux);
+			break;
+				
+		}
+		auxprev=aux;
+	}
+}
+//livros
+void delNodeLL (lLivros *s, int id )
+{
+	if (s->first == NULL)
+	{
+		printf("Lista vazia\n");
+		return;
+	}
+	nLivros *aux=s->first,*auxprev=s->first;
+
+	for (;aux!=NULL;aux=aux->next)
+	{
+		if (aux->info.id == id)
+		{
+			s->qtelem--;
+			if (aux == s->first)
+			{
+				s->first = aux->next;
+				free(aux);
+				break;
+			}
+			if (aux->next == NULL)
+			{
+				auxprev->next = NULL;
+				free(aux);
+				break;
+			}
+			auxprev->next = aux->next;
+			free(aux);
+			break;	
+		}
+		auxprev=aux;
+	}
+}
+//excluiu da arvore:
+void delNodeTL (tLivros *n, int v)
+{
+	if(n->root==NULL) return;
+	TNLivros *aux=n->root, *parent=n->root, *aux2;
+	while(aux!=NULL)
+		if (v<aux->id)
+		{ 	
+			parent=aux;
+			aux= aux->left;
+		}
+		else if (v>aux->id) 
+		{
+			parent=aux;
+			aux=aux->right;
+		}
+			else break;
+		
+	if (aux==NULL) return; //não encontrou o dado
+
+	//Caso 1
+	if (aux->left==NULL && aux->right==NULL)
+	{
+        if(aux==parent) n->root=NULL;
+		else if (aux->id<=parent->id) parent->left=NULL;
+		else				   parent->right=NULL;
+		free(aux);
+		return;
+	
+	}
+	//Caso 2
+	if ((aux->left==NULL && aux->right !=NULL) || (aux->left!=NULL && aux->right ==NULL ))
+	{
+		if (aux->left==NULL)
+		{	
+			if(aux==n->root) {n->root=aux->right; free(aux);return;}
+			if (aux->id<=parent->id) parent->left=aux->right;
+			else parent->right=aux->right;	
+					  
+		}
+		else {
+			if(aux==n->root) {n->root=aux->left; free(aux); return;}
+			if (aux->id<=parent->id) parent->left=aux->left;
+			else parent->right=aux->left;
+		}
+		free(aux);
+		return;	
+	}
+	//caso 3 
+	if (aux->left!=NULL && aux->right !=NULL)
+	{
+		aux2=aux->right;
+		
+		TNLivros *parent2=aux;
+		for (;aux2->left!=NULL;aux2=aux2->left){parent2=aux2;}//acha o aux2 e o parent dele
+
+		
+		//caso se for folha
+		if(aux2->left==NULL&&aux2->right==NULL)
+		{
+			if (aux2->id<=parent2->id) parent2->left=NULL;
+			else					parent2->right=NULL;
+			aux->id=aux2->id;
+			free(aux2);
+			return;
+		}
+		//caso n for folha e for filho do aux
+		if (parent2==aux)
+		{
+			aux->id=aux2->id;
+			aux->right=aux2->right;
+			free(aux2);
+			return;
+		}
+		//caso n for folha e não for filho do aux
+		else
+		{
+			aux->id=aux2->id;
+			parent2->left=aux2->right;
+			free(aux2);
+			return;
+		}
+	}
+}

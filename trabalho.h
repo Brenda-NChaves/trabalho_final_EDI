@@ -17,7 +17,7 @@ typedef struct livro
     char titulo[50];
     char autor[50];
     int ano, id, status,emp;
-    char email[30];
+    char email[255];
 }Livro;
 
 //nó e arvore para os livros
@@ -63,45 +63,68 @@ typedef struct listusuarios
     int qtelem;
 }lUsers;
 
-// Conversão de letras
-void paraMinusculo(char texto[]);
+
+#ifndef TRABALHO_H
+#define TRABALHO_H
+
+// FUNÇÕES DE MENU
 void paraMaiusculo(char *str);
-void GetMaieMin(char *c, int tam, int flag);
-
-// Funções do menu
 void menu(tLivros *TL, lUsers *LU, lLivros *LL);
-void cadastro(tLivros *TL, lUsers *U, lLivros *LL);
+void cadastro(tLivros *TL, lUsers *U, lLivros *L);
 void consulta(tLivros *TL, lUsers *LU, lLivros *LL);
-void atualiza(tLivros *TL, lUsers *LU, lLivros *LL);
-void excluir();
-void emprestar();
-void devolver();
-void estatisticas();
-void sair();
+void atualiza(tLivros *TL, lUsers *LU);
+void excluir(tLivros *TL, lUsers *LU, lLivros *LL);
+void emprestar(tLivros *TL, lUsers *LU);
+void devolver(tLivros *TL);
+void estatisticas(lUsers *LU, lLivros *LL);
+void sair(tLivros *TL, lUsers *LU, lLivros *LL);
 
-// Construção de estruturas
+// CONSTRUÇÃO DE NÓS E LISTAS
 Usuario setUser(char email[30], char nome[50]);
 Livro setLivro(char title[50], char autor[50], int ano, lLivros *L);
 
-TNLivros *setNodeTL(int id, nLivros *l);
 nLivros *setNodeL(Livro L);
 nUser *setNodeU(Usuario U);
+TNLivros *setNodeTL(int id, nLivros *endereco);
 
-// Inicialização
 void initLlivros(lLivros *l);
 void initlUser(lUsers *u);
 void initTlivros(tLivros *t);
 
-// Inserção
 void addNodeLL(lLivros *LL, nLivros *l);
 void addNodeU(lUsers *LU, nUser *User);
 
-// Busca
+// AVL
+int depthSubTree(TNLivros *root);
+
+TNLivros *ll(TNLivros *root);
+TNLivros *rr(TNLivros *root);
+TNLivros *lr(TNLivros *root);
+TNLivros *rl(TNLivros *root);
+
+TNLivros *balanceCheck(TNLivros *root);
+TNLivros *insertNodeR(TNLivros *root, TNLivros *n);
+
+// FUNÇÕES DE BUSCA
 nLivros *findID(TNLivros *L, int id);
 void findAutor(nLivros *L, char autor[50]);
 nUser *findEmail(nUser *U, char email[255]);
 void findNome(nUser *U, char nome[50]);
 void findLporU(nLivros *L, char email[255]);
+
+void GetM(char *c, int tam);
+
+// LIBERAÇÃO DE MEMÓRIA
+void freeMemoryLL(nLivros *l);
+void freeMemoryLU(nUser *u);
+void freeMemoryTL(TNLivros *l);
+
+// EXCLUSÃO
+void delNodeLU(lUsers *s, nUser *U);
+void delNodeLL(lLivros *s, int id);
+void delNodeTL(tLivros *n, int v);
+
+#endif
 
 
 int main()
